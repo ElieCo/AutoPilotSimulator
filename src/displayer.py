@@ -2,8 +2,11 @@ from tkinter import *
 from threading import Thread
 import numpy as np
 
+WIDTH = 1000
+HEIGHT = 1000
+
 def simu_to_tk_coords(x, y):
-    return x + 500, 500 - y
+    return x + WIDTH / 2, HEIGHT - y - 10
 
 class BoatDraw:
     def __init__(self, canvas, x, y, yaw, helm_angle, color="black"):
@@ -18,8 +21,6 @@ class BoatDraw:
 
     def getPolygonCoords(self, x, y, yaw, helm_angle):
 
-        x, y = simu_to_tk_coords(x, y)
-
         l1 = 20
         x1 = x + np.cos(yaw) * l1
         y1 = y + np.sin(yaw) * l1
@@ -33,6 +34,12 @@ class BoatDraw:
         lh = 4
         xh = x - np.cos(yaw + helm_angle) * lh
         yh = y - np.sin(yaw + helm_angle) * lh
+
+        x, y = simu_to_tk_coords(x, y)
+        x1, y1 = simu_to_tk_coords(x1, y1)
+        x2, y2 = simu_to_tk_coords(x2, y2)
+        x3, y3 = simu_to_tk_coords(x3, y3)
+        xh, yh = simu_to_tk_coords(xh, yh)
 
         return xh, yh, x, y, x2, y2, x1, y1, x3, y3, x, y
 
@@ -49,7 +56,7 @@ class Displayer(Thread):
 
     def init_window(self):
         self.window = Tk()
-        self.canvas = Canvas(self.window, width=1000, height=1000, background='white')
+        self.canvas = Canvas(self.window, width=WIDTH, height=HEIGHT, background='white')
         self.canvas.pack()
 
     def run(self):

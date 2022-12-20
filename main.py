@@ -39,15 +39,18 @@ if __name__ == "__main__":
     dt = 0.1
     ts = 0
     speed = 1
-    duration = 20
+    duration = 30
     while ts <= duration:
         # Update timestamp
         ts += dt
 
+        # Update climatic condition of every boat
+
         # Move all boats
+        for boat in boats:
+            boat.move(dt)
 
         # Update data of the player boat
-        boats[0].yaw += np.radians(1)
 
         # Display
         displayer.display(ts, None, boats, None)
