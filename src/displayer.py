@@ -48,20 +48,25 @@ class Displayer(Thread):
     def __init__(self, display_dt_s):
         Thread.__init__(self)
 
+        self.window = None
         self.canvas = None
 
         self.dt = display_dt_s
         self.ts = None
         self.boats = {}
 
-    def init_window(self):
+    def stop(self):
+        if self.window is not None:
+            self.window.quit()
+
+    def run(self):
         self.window = Tk()
         self.canvas = Canvas(self.window, width=WIDTH, height=HEIGHT, background='white')
         self.canvas.pack()
 
-    def run(self):
-        self.init_window()
         self.window.mainloop()
+
+        self.canvas = None
 
     def display(self, ts, marks, boats, wind_table):
         if self.canvas is None:

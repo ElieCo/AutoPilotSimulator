@@ -8,12 +8,17 @@ from eole import Eole
 from displayer import Displayer
 from boat import NoobPilot, Boat
 
+class Buoy:
+    def __init__(self, x, y, valid_dist):
+        self.pos = np.array([float(x), float(y)])
+        self.valid_dist = valid_dist
+
 
 if __name__ == "__main__":
 
     # Parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--nooboat', help="set the number of nooboat", type=int, default=1, required=False)
+    parser.add_argument('--nooboat', help="set the number of nooboat", type=int, default=10, required=False)
     args = parser.parse_args()
 
     nooboat_nb = args.nooboat
@@ -34,23 +39,32 @@ if __name__ == "__main__":
     displayer.start()
 
     # Init route
+    buoy_data = []
+    buoy_data.append(Buoy(0, 800, 50))
+    buoy_data.append(Buoy(-200, 800, 50))
+    buoy_data.append(Buoy(-200, 0, 50))
+    buoy_data.append(Buoy(0, 0, 50))
+    buoy_data.append(Buoy(0, 800, 50))
+    buoy_data.append(Buoy(-200, 800, 50))
+    buoy_data.append(Buoy(-200, 0, 50))
+    buoy_data.append(Buoy(0, 0, 50))
 
     # Start simulation
     dt = 0.1
     ts = 0
-    speed = 1
-    duration = 30
-    while ts <= duration:
+    speed = 100
+    duration = 600000
+    while ts <= duration and displayer.is_alive():
         # Update timestamp
         ts += dt
 
-        # Update climatic condition of every boat
+        # Update data of every boat
+        for boat in boats:
+            boat.updatePilot([np.radians(90), 5], buoy_data, None)
 
         # Move all boats
         for boat in boats:
             boat.move(dt)
-
-        # Update data of the player boat
 
         # Display
         displayer.display(ts, None, boats, None)
@@ -59,3 +73,7 @@ if __name__ == "__main__":
 
         # Sleep the necessary time
         time.sleep(float(dt)/speed)
+
+    # Stop and wait the displayer
+    displayer.stop()
+    displayer.join()
