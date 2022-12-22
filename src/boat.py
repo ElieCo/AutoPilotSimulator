@@ -20,12 +20,13 @@ class AutoPilot:
         self.helm_angle = 0
 
     def update(self, own_data, wind_data, next_buoy, boats_data):
-        raise("The update function of the AutoPilot need to be overwritten !")
+        raise("The update function of the AutoPilot class need to be overwritten !")
 
 class NoobPilot(AutoPilot):
     def __init__(self):
         super(NoobPilot, self).__init__()
         self.yaw_setpoint = None
+        self.up_wind_angle = np.radians(30)
 
     def update(self, own_data, wind_data, next_buoy, boats_data):
         if self.yaw_setpoint is None or abs(self.yaw_setpoint - own_data["yaw"]) < np.radians(5):
@@ -34,12 +35,12 @@ class NoobPilot(AutoPilot):
 
             wind = get_angle_around(wind_data[0], own_data["yaw"])
             wind_dest = get_angle_around(wind - self.yaw_setpoint, 0)
-            if abs(wind_dest) < np.radians(30):
+            if abs(wind_dest) < self.up_wind_angle:
                 hazard_coef = 1 if np.random.randint(TACK_CHANCE) != 0 else -1
-                if abs(wind - np.radians(30) - own_data["yaw"]) > abs(wind + np.radians(30) - own_data["yaw"]):
-                    self.yaw_setpoint = wind + np.radians(30) * hazard_coef
+                if abs(wind - self.up_wind_angle - own_data["yaw"]) > abs(wind + self.up_wind_angle - own_data["yaw"]):
+                    self.yaw_setpoint = wind + self.up_wind_angle * hazard_coef
                 else:
-                    self.yaw_setpoint = wind - np.radians(30) * hazard_coef
+                    self.yaw_setpoint = wind - self.up_wind_angle * hazard_coef
 
 
         if abs(self.yaw_setpoint - own_data["yaw"]) < np.radians(2):
@@ -49,6 +50,10 @@ class NoobPilot(AutoPilot):
         else:
             self.helm_angle = np.radians(-20)
 
+class ChampiNoobPilot(NoobPilot):
+    def __init__(self):
+        super(ChampiNoobPilot, self).__init__()
+        self.up_wind_angle = np.radians(40)
 
 class Boat:
     def __init__(self, pilot, name):

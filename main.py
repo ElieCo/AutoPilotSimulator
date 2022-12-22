@@ -6,7 +6,7 @@ import argparse
 sys.path.append("src")
 from eole import Eole
 from displayer import Displayer
-from boat import NoobPilot, Boat
+from boat import NoobPilot, ChampiNoobPilot, Boat
 
 class Buoy:
     def __init__(self, x, y, valid_dist):
@@ -30,6 +30,7 @@ if __name__ == "__main__":
         boats.append(Boat(NoobPilot(), "Noob" + str(i)))
 
     # Init player boat
+    boats.append(Boat(ChampiNoobPilot(), "Champi"))
 
     # Init wind manager
     eole = Eole()
@@ -61,7 +62,11 @@ if __name__ == "__main__":
 
         # Update data of every boat
         for boat in boats:
-            boat.updatePilot([np.radians(90), 5], buoys, None)
+            # Get wind for this boat
+            wind = [np.radians(90), 5]
+
+            # Update data
+            boat.updatePilot(wind, buoys, None)
 
         # Move all boats
         for boat in boats:
