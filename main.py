@@ -34,20 +34,21 @@ if __name__ == "__main__":
     # Init wind manager
     eole = Eole()
 
-    # Init displayer
-    displayer = Displayer(0.1)
-    displayer.start()
-
     # Init route
-    buoy_data = []
-    buoy_data.append(Buoy(0, 800, 50))
-    buoy_data.append(Buoy(-200, 800, 50))
-    buoy_data.append(Buoy(-200, 0, 50))
-    buoy_data.append(Buoy(0, 0, 50))
-    buoy_data.append(Buoy(0, 800, 50))
-    buoy_data.append(Buoy(-200, 800, 50))
-    buoy_data.append(Buoy(-200, 0, 50))
-    buoy_data.append(Buoy(0, 0, 50))
+    buoys = []
+    valid_dist = 5
+    buoys.append(Buoy(0, 800, valid_dist))
+    buoys.append(Buoy(-200, 800, valid_dist))
+    buoys.append(Buoy(-200, 0, valid_dist))
+    buoys.append(Buoy(0, 0, valid_dist))
+    buoys.append(Buoy(0, 800, valid_dist))
+    buoys.append(Buoy(-200, 800, valid_dist))
+    buoys.append(Buoy(-200, 0, valid_dist))
+    buoys.append(Buoy(0, 0, valid_dist))
+
+    # Init displayer with the buoys
+    displayer = Displayer(0.1, buoys)
+    displayer.start()
 
     # Start simulation
     dt = 0.1
@@ -60,14 +61,14 @@ if __name__ == "__main__":
 
         # Update data of every boat
         for boat in boats:
-            boat.updatePilot([np.radians(90), 5], buoy_data, None)
+            boat.updatePilot([np.radians(90), 5], buoys, None)
 
         # Move all boats
         for boat in boats:
             boat.move(dt)
 
         # Display
-        displayer.display(ts, None, boats, None)
+        displayer.display(ts, boats, None)
 
         # Ask the decision of the player boat
 

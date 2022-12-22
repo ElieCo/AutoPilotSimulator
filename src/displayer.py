@@ -45,7 +45,7 @@ class BoatDraw:
 
 
 class Displayer(Thread):
-    def __init__(self, display_dt_s):
+    def __init__(self, display_dt_s, buoys = None):
         Thread.__init__(self)
 
         self.window = None
@@ -54,6 +54,7 @@ class Displayer(Thread):
         self.dt = display_dt_s
         self.ts = None
         self.boats = {}
+        self.buoys = buoys
 
     def stop(self):
         if self.window is not None:
@@ -64,11 +65,25 @@ class Displayer(Thread):
         self.canvas = Canvas(self.window, width=WIDTH, height=HEIGHT, background='white')
         self.canvas.pack()
 
+        # Display the buoys
+        self.display_buoys()
+
         self.window.mainloop()
 
         self.canvas = None
 
-    def display(self, ts, marks, boats, wind_table):
+    def display_buoys(self):
+        color = "red"
+        for buoy in self.buoys:
+            x0 = buoy.pos[0]-buoy.valid_dist/2
+            y0 = buoy.pos[1]-buoy.valid_dist/2
+            x1 = buoy.pos[0]+buoy.valid_dist/2
+            y1 = buoy.pos[1]+buoy.valid_dist/2
+            x0, y0 = simu_to_tk_coords(x0, y0)
+            x1, y1 = simu_to_tk_coords(x1, y1)
+            self.canvas.create_oval(x0, y0, x1, y1, fill=color, outline=color, width=3)
+
+    def display(self, ts, boats, wind_table):
         if self.canvas is None:
             return
 
