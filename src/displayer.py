@@ -17,7 +17,8 @@ class BoatDraw:
         self.redraw(x, y, yaw, helm_angle)
 
     def redraw(self, x, y, yaw, helm_angle):
-        self.canvas.coords(self.poly, *self.getPolygonCoords(x, y, yaw, helm_angle))
+        if self.canvas is not None:
+            self.canvas.coords(self.poly, *self.getPolygonCoords(x, y, yaw, helm_angle))
 
     def getPolygonCoords(self, x, y, yaw, helm_angle):
 
@@ -56,9 +57,14 @@ class Displayer(Thread):
         self.boats = {}
         self.buoys = buoys
 
+        self.close_behind_you = False
+
     def stop(self):
         if self.window is not None:
             self.window.quit()
+
+    def on_closing(self):
+        self.close_behind_you = True
 
     def run(self):
         self.window = Tk()
@@ -68,6 +74,7 @@ class Displayer(Thread):
         # Display the buoys
         self.display_buoys()
 
+        self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.window.mainloop()
 
         self.canvas = None
@@ -98,3 +105,6 @@ class Displayer(Thread):
                 self.boats[boat.name] = BoatDraw(self.canvas, boat.pos[0], boat.pos[1], boat.yaw, boat.helm_angle, color)
             else:
                 self.boats[boat.name].redraw(boat.pos[0], boat.pos[1], boat.yaw, boat.helm_angle)
+
+        if self.close_behind_you:
+            self.window.quit()
