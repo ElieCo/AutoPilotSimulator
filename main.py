@@ -7,12 +7,7 @@ sys.path.append("src")
 from eole import Eole
 from displayer import Displayer
 from boat import NoobPilot, ChampiNoobPilot, Boat
-
-class Buoy:
-    def __init__(self, x, y, valid_dist):
-        self.pos = np.array([float(x), float(y)])
-        self.valid_dist = valid_dist
-
+from buoy import Buoy
 
 if __name__ == "__main__":
 
