@@ -38,13 +38,13 @@ if __name__ == "__main__":
     # Init route
     buoys = []
     valid_dist = 5
-    buoys.append(Buoy(0, 800, valid_dist))
-    buoys.append(Buoy(-200, 800, valid_dist))
-    buoys.append(Buoy(-200, 0, valid_dist))
+    buoys.append(Buoy(800, 0, valid_dist))
+    buoys.append(Buoy(800, -200, valid_dist))
+    buoys.append(Buoy(0, -200, valid_dist))
     buoys.append(Buoy(0, 0, valid_dist))
-    buoys.append(Buoy(0, 800, valid_dist))
-    buoys.append(Buoy(-200, 800, valid_dist))
-    buoys.append(Buoy(-200, 0, valid_dist))
+    buoys.append(Buoy(800, 0, valid_dist))
+    buoys.append(Buoy(800, -200, valid_dist))
+    buoys.append(Buoy(0, -200, valid_dist))
     buoys.append(Buoy(0, 0, valid_dist))
 
     # Init displayer with the buoys
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         # Update data of every boat
         for boat in boats:
             # Get wind for this boat
-            wind = [np.radians(90), 5]
+            wind = [np.radians(0), 5]
 
             # Update data
             boat.updatePilot(wind, buoys, None)
