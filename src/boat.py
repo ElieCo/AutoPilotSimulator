@@ -90,6 +90,7 @@ class Boat:
         self.name = name
 
         self.buoy_index = 0
+        self.all_buoys_reached = False
 
         self.wind = [0, 0]
 
@@ -121,8 +122,9 @@ class Boat:
             if np.linalg.norm(buoy_data[self.buoy_index].pos - self.pos) < buoy_data[self.buoy_index].valid_dist:
                 self.buoy_index += 1
 
-        if len(buoy_data):
-            self.buoy_index = self.buoy_index % len(buoy_data)
+        if len(buoy_data) and self.buoy_index >= len(buoy_data):
+            self.buoy_index = 0
+            self.all_buoys_reached = True
 
     def updatePilot(self, wind_data, buoy_data, boats):
         self.validate_buoy(buoy_data)

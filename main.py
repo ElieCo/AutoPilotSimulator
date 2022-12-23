@@ -23,9 +23,11 @@ if __name__ == "__main__":
     # Init Nooboats
     for i in range(nooboat_nb):
         boats.append(Boat(NoobPilot(), "Noob" + str(i)))
+    boats.append(Boat(ChampiNoobPilot(), "Champi"))
 
     # Init player boat
-    boats.append(Boat(ChampiNoobPilot(), "Champi"))
+    player = Boat(ChampiNoobPilot(), "Player")
+    boats.append(player)
 
     # Init wind manager
     eole = Eole()
@@ -50,8 +52,8 @@ if __name__ == "__main__":
     dt = 0.1
     ts = 0
     speed = 100
-    duration = 600000
-    while ts <= duration and displayer.is_alive():
+    timeout = 6000000
+    while ts <= timeout and displayer.is_alive():
         # Update timestamp
         ts += dt
 
@@ -63,14 +65,15 @@ if __name__ == "__main__":
             # Update data
             boat.updatePilot(wind, buoys, boats)
 
-        # Move all boats
-        for boat in boats:
-            boat.move(dt)
+        # Ask the decision of the player boat
+
+        # Move all boats while the PLayer have not reach the last buoy
+        if not player.all_buoys_reached:
+            for boat in boats:
+                boat.move(dt)
 
         # Display
         displayer.display(ts, boats, None)
-
-        # Ask the decision of the player boat
 
         # Sleep the necessary time
         time.sleep(float(dt)/speed)
