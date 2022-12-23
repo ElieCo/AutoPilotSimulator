@@ -2,19 +2,20 @@ import numpy as np
 import sys
 import time
 import argparse
+import os
 
 from src.eole import Eole
 from src.displayer import Displayer
 from src.boat import NoobPilot, ChampiNoobPilot, Boat
 from src.buoy import Buoy
 
-try:
-    from player.player_code import PlayerPilot
-except:
+if not os.path.exists("player/player_code.py"):
     print("Error: You should create in the \"player\" directory a "
     "file called \"player_code.py\" containing a class called \"PlayerPilot\" "
     "which inheritate of \"src.boat.AutoPilot\"")
     exit(-1)
+
+from player.player_code import PlayerPilot
 
 if __name__ == "__main__":
 
@@ -33,7 +34,7 @@ if __name__ == "__main__":
     boats.append(Boat(ChampiNoobPilot(), "ChampiNoob"))
 
     # Init player boat
-    player = Boat(ChampiNoobPilot(), "Player")
+    player = Boat(PlayerPilot(), "Player")
     boats.append(player)
 
     # Init wind manager

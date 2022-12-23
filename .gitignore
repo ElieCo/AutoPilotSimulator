@@ -3,3 +3,4 @@ src/__pycache__/
 player/__pycache__/
 player/*
 !player/.nodelete
+!player/player_code_example.py
