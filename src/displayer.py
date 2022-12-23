@@ -6,7 +6,7 @@ WIDTH = 1000
 HEIGHT = 1000
 
 def simu_to_tk_coords(x, y):
-    return y + WIDTH/2, HEIGHT - 10 - x
+    return y + WIDTH/2, HEIGHT - 50 - x
 
 class BoatDraw:
     def __init__(self, canvas, x, y, yaw, helm_angle, color="black"):

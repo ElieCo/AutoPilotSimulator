@@ -3,11 +3,18 @@ import sys
 import time
 import argparse
 
-sys.path.append("src")
-from eole import Eole
-from displayer import Displayer
-from boat import NoobPilot, ChampiNoobPilot, Boat
-from buoy import Buoy
+from src.eole import Eole
+from src.displayer import Displayer
+from src.boat import NoobPilot, ChampiNoobPilot, Boat
+from src.buoy import Buoy
+
+try:
+    from player.player_code import PlayerPilot
+except:
+    print("Error: You should create in the \"player\" directory a "
+    "file called \"player_code.py\" containing a class called \"PlayerPilot\" "
+    "which inheritate of \"src.boat.AutoPilot\"")
+    exit(-1)
 
 if __name__ == "__main__":
 
@@ -23,7 +30,7 @@ if __name__ == "__main__":
     # Init Nooboats
     for i in range(nooboat_nb):
         boats.append(Boat(NoobPilot(), "Noob" + str(i)))
-    boats.append(Boat(ChampiNoobPilot(), "Champi"))
+    boats.append(Boat(ChampiNoobPilot(), "ChampiNoob"))
 
     # Init player boat
     player = Boat(ChampiNoobPilot(), "Player")

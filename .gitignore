@@ -1,2 +1,5 @@
 
 src/__pycache__/
+player/__pycache__/
+player/*
+!player/.nodelete
