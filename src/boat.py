@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 S_TABLE = [0, 0.2, 1, 2.2, 2.6, 3.1, 3.9, 4.1, 4.3, 4.5, 4.6, 4.5, 4.5, 4.1, 3.8, 3.2, 3, 2.7, 2.5]
 TACK_CHANCE = 1000
@@ -17,9 +18,29 @@ def get_angle_around(angle, target):
 
 class AutoPilot:
     def __init__(self):
-        self.helm_angle = 0
+        # Init all the observations the pilot can have
+        self.obs = {
+            "pos": np.array([0.0, 0.0]),
+            "yaw": 0,
+            "pitch": 0,
+            "roll": 0,
 
-    def update(self, own_data, wind_data, next_buoy, boats_data):
+            "wind_speed": 0,
+            "wind_direction": 0,
+
+            "buoy_bearing": 0,
+            "buoy_distance": 0,
+
+            "boats": [] # List of {"bearing": 0, "distance": 0, "speed": 0, "yaw": 0, "roll": 0}
+        }
+
+        # Init all cmd
+        self.cmd = {
+            "helm_angle": 0
+        }
+
+
+    def update(self):
         raise("The update function of the AutoPilot class need to be overwritten !")
 
 class NoobPilot(AutoPilot):
@@ -28,27 +49,27 @@ class NoobPilot(AutoPilot):
         self.yaw_setpoint = None
         self.up_wind_angle = np.radians(30)
 
-    def update(self, own_data, wind_data, next_buoy, boats_data):
-        if self.yaw_setpoint is None or abs(self.yaw_setpoint - own_data["yaw"]) < np.radians(5):
+    def update(self):
+        if self.yaw_setpoint is None or abs(self.yaw_setpoint - self.obs["yaw"]) < np.radians(5):
 
-            self.yaw_setpoint = get_angle_around(bearing(own_data["pos"], next_buoy.pos), own_data["yaw"])
+            self.yaw_setpoint = get_angle_around(self.obs["buoy_bearing"], self.obs["yaw"])
 
-            wind = get_angle_around(wind_data[0], own_data["yaw"])
+            wind = get_angle_around(self.obs["wind_direction"], self.obs["yaw"])
             wind_dest = get_angle_around(wind - self.yaw_setpoint, 0)
             if abs(wind_dest) < self.up_wind_angle:
                 hazard_coef = 1 if np.random.randint(TACK_CHANCE) != 0 else -1
-                if abs(wind - self.up_wind_angle - own_data["yaw"]) > abs(wind + self.up_wind_angle - own_data["yaw"]):
+                if abs(wind - self.up_wind_angle - self.obs["yaw"]) > abs(wind + self.up_wind_angle - self.obs["yaw"]):
                     self.yaw_setpoint = wind + self.up_wind_angle * hazard_coef
                 else:
                     self.yaw_setpoint = wind - self.up_wind_angle * hazard_coef
 
 
-        if abs(self.yaw_setpoint - own_data["yaw"]) < np.radians(2):
-            self.helm_angle = 0
-        elif self.yaw_setpoint > own_data["yaw"]:
-            self.helm_angle = np.radians(20)
+        if abs(self.yaw_setpoint - self.obs["yaw"]) < np.radians(2):
+            self.cmd["helm_angle"] = 0
+        elif self.yaw_setpoint > self.obs["yaw"]:
+            self.cmd["helm_angle"] = np.radians(20)
         else:
-            self.helm_angle = np.radians(-20)
+            self.cmd["helm_angle"] = np.radians(-20)
 
 class ChampiNoobPilot(NoobPilot):
     def __init__(self):
@@ -58,11 +79,16 @@ class ChampiNoobPilot(NoobPilot):
 class Boat:
     def __init__(self, pilot, name):
         self.pilot = pilot
+
         self.pos = np.array([0.0, 0.0])
         self.speed = 10
         self.yaw = 0
+        self.roll = 0
+
         self.helm_angle = 0
+
         self.name = name
+
         self.buoy_index = 0
 
         self.wind = [0, 0]
@@ -98,12 +124,39 @@ class Boat:
         if len(buoy_data):
             self.buoy_index = self.buoy_index % len(buoy_data)
 
-    def updatePilot(self, wind_data, buoy_data, boats_data):
+    def updatePilot(self, wind_data, buoy_data, boats):
         self.validate_buoy(buoy_data)
 
+        # From x,y buoy position to observations
+        self.pilot.obs["buoy_bearing"] = bearing(self.pos, buoy_data[self.buoy_index].pos)
+        self.pilot.obs["buoy_distance"] = np.linalg.norm(buoy_data[self.buoy_index].pos - self.pos)
+
+        # From own data to pilot observations
+        self.pilot.obs["pos"] = self.pos.copy()
+        self.pilot.obs["speed"] = self.speed
+        self.pilot.obs["yaw"] = self.yaw
+
+        # From boats data to pilot observations
+        self.pilot.obs["boats"] = []
+        for boat in boats:
+            if boat != self:
+                boat_obs = {
+                    "bearing": bearing(self.pos, boat.pos),
+                    "distance": np.linalg.norm(boat.pos - self.pos),
+                    "speed": boat.speed,
+                    "yaw": boat.yaw,
+                    "roll": boat.roll
+                }
+                self.pilot.obs["boats"].append(copy.deepcopy(boat_obs))
+
+
+        # Save wind for Boat matters
         self.wind = wind_data
 
-        own_data = {"pos": self.pos.copy(), "speed": self.speed, "yaw": self.yaw}
-        self.pilot.update(own_data, wind_data, buoy_data[self.buoy_index], boats_data)
+        # From wind data to pilot observations
+        self.pilot.obs["wind_direction"] = wind_data[0]
+        self.pilot.obs["wind_speed"] = wind_data[1]
 
-        self.helm_angle = self.pilot.helm_angle
+        self.pilot.update()
+
+        self.helm_angle = self.pilot.cmd["helm_angle"]

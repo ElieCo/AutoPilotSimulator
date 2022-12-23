@@ -61,7 +61,7 @@ if __name__ == "__main__":
             wind = [np.radians(0), 5]
 
             # Update data
-            boat.updatePilot(wind, buoys, None)
+            boat.updatePilot(wind, buoys, boats)
 
         # Move all boats
         for boat in boats:
