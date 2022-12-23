@@ -30,7 +30,7 @@ if __name__ == "__main__":
     boats.append(player)
 
     # Init wind manager
-    eole = Eole()
+    eole = Eole(0, 5)
 
     # Init route
     buoys = []
@@ -60,7 +60,7 @@ if __name__ == "__main__":
         # Update data of every boat
         for boat in boats:
             # Get wind for this boat
-            wind = [np.radians(0), 5]
+            wind = eole.get_wind_at(boat.pos)
 
             # Update data
             boat.updatePilot(wind, buoys, boats)
