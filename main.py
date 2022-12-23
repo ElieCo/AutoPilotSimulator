@@ -61,7 +61,7 @@ if __name__ == "__main__":
     ts = 0
     speed = 100
     timeout = 6000000
-    while ts <= timeout and displayer.is_alive():
+    while ts <= timeout and not player.all_buoys_reached and displayer.is_alive():
         # Update timestamp
         ts += dt
 
@@ -75,10 +75,9 @@ if __name__ == "__main__":
 
         # Ask the decision of the player boat
 
-        # Move all boats while the PLayer have not reach the last buoy
-        if not player.all_buoys_reached:
-            for boat in boats:
-                boat.move(dt)
+        # Move all boats
+        for boat in boats:
+            boat.move(dt)
 
         # Display
         displayer.display(ts, boats, None)
@@ -86,6 +85,7 @@ if __name__ == "__main__":
         # Sleep the necessary time
         time.sleep(float(dt)/speed)
 
-    # Stop and wait the displayer
-    displayer.stop()
-    displayer.join()
+    # Wait that the player close the window
+    while displayer.is_alive():
+        displayer.check_closing()
+        time.sleep(0.1)

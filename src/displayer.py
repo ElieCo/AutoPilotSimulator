@@ -90,6 +90,10 @@ class Displayer(Thread):
             x1, y1 = simu_to_tk_coords(x1, y1)
             self.canvas.create_oval(x0, y0, x1, y1, fill=color, outline=color, width=3)
 
+    def check_closing(self):
+        if self.close_behind_you:
+            self.window.quit()
+
     def display(self, ts, boats, wind_table):
         if self.canvas is None:
             return
@@ -106,5 +110,4 @@ class Displayer(Thread):
             else:
                 self.boats[boat.name].redraw(boat.pos[0], boat.pos[1], boat.yaw, boat.helm_angle)
 
-        if self.close_behind_you:
-            self.window.quit()
+        self.check_closing()
