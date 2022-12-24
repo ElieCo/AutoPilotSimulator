@@ -46,7 +46,7 @@ class BoatDraw:
 
 
 class Displayer(Thread):
-    def __init__(self, display_dt_s, buoys = None):
+    def __init__(self, display_dt_s, buoys, fake_window=False):
         Thread.__init__(self)
 
         self.window = None
@@ -59,25 +59,32 @@ class Displayer(Thread):
 
         self.close_behind_you = False
 
+        self.fake_window = fake_window
+
     def stop(self):
-        if self.window is not None:
-            self.window.quit()
+        self.close_behind_you = True
+        self.check_closing()
 
     def on_closing(self):
         self.close_behind_you = True
 
     def run(self):
-        self.window = Tk()
-        self.canvas = Canvas(self.window, width=WIDTH, height=HEIGHT, background='white')
-        self.canvas.pack()
+        if self.fake_window:
+            while not self.close_behind_you:
+                pass
 
-        # Display the buoys
-        self.display_buoys()
+        else:
+            self.window = Tk()
+            self.canvas = Canvas(self.window, width=WIDTH, height=HEIGHT, background='white')
+            self.canvas.pack()
 
-        self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
-        self.window.mainloop()
+            # Display the buoys
+            self.display_buoys()
 
-        self.canvas = None
+            self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
+            self.window.mainloop()
+
+            self.canvas = None
 
     def display_buoys(self):
         color = "red"
@@ -91,7 +98,7 @@ class Displayer(Thread):
             self.canvas.create_oval(x0, y0, x1, y1, fill=color, outline=color, width=3)
 
     def check_closing(self):
-        if self.close_behind_you:
+        if self.close_behind_you and self.window is not None:
             self.window.quit()
 
     def display(self, ts, boats, wind_table):

@@ -17,28 +17,28 @@ if not os.path.exists("player/player_code.py"):
 
 from player.player_code import PlayerPilot
 
+MEAS_NB_SIMU = 10
+
 if __name__ == "__main__":
 
     # Parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--nooboat', help="set the number of nooboat", type=int, default=10, required=False)
+    parser.add_argument('--measure', help="measure the mean duration your boat need finish the run", action="store_true")
     args = parser.parse_args()
 
     nooboat_nb = args.nooboat
+    if args.measure:
+        nooboat_nb = 0
+        print("Wait, it will perform %i simulations to have the mean duration your pilot need to finish this run." % MEAS_NB_SIMU)
 
     boats = []
 
     # Init Nooboats
-    for i in range(nooboat_nb):
-        boats.append(Boat(NoobPilot(), "Noob" + str(i)))
-    boats.append(Boat(ChampiNoobPilot(), "ChampiNoob"))
-
-    # Init player boat
-    player = Boat(PlayerPilot(), "Player")
-    boats.append(player)
-
-    # Init wind manager
-    eole = Eole(0, 5)
+    if nooboat_nb > 0:
+        for i in range(nooboat_nb - 1):
+            boats.append(Boat(NoobPilot(), "Noob" + str(i)))
+        boats.append(Boat(ChampiNoobPilot(), "ChampiNoob"))
 
     # Init route
     buoys = []
@@ -53,37 +53,58 @@ if __name__ == "__main__":
     buoys.append(Buoy(0, 0, valid_dist))
 
     # Init displayer with the buoys
-    displayer = Displayer(0.1, buoys)
+    displayer = Displayer(0.1, buoys, args.measure)
     displayer.start()
 
-    # Start simulation
-    dt = 0.1
-    ts = 0
-    speed = 100
-    timeout = 6000000
-    while ts <= timeout and not player.all_buoys_reached and displayer.is_alive():
-        # Update timestamp
-        ts += dt
+    # If this is a measure, make 10 simulations
+    nb_simu = 10 if args.measure else 1
+    ts_measured = []
+    for _ in range(nb_simu):
 
-        # Update data of every boat
-        for boat in boats:
-            # Get wind for this boat
-            wind = eole.get_wind_at(boat.pos)
+        # Init player boat
+        player = Boat(PlayerPilot(), "Player")
+        boats.append(player)
 
-            # Update data
-            boat.updatePilot(wind, buoys, boats)
+        # Init wind manager
+        eole = Eole(0, 5)
 
-        # Ask the decision of the player boat
+        # Start simulation
+        dt = 0.1
+        if args.measure:
+            dt = 1
+        ts = 0
+        speed = 100
+        timeout = 6000000
+        while ts <= timeout and not player.all_buoys_reached and displayer.is_alive():
+            # Update timestamp
+            ts += dt
 
-        # Move all boats
-        for boat in boats:
-            boat.move(dt)
+            # Update data of every boat
+            for boat in boats:
+                # Get wind for this boat
+                wind = eole.get_wind_at(boat.pos)
 
-        # Display
-        displayer.display(ts, boats, None)
+                # Update data
+                boat.updatePilot(wind, buoys, boats)
 
-        # Sleep the necessary time
-        time.sleep(float(dt)/speed)
+            # Ask the decision of the player boat
+
+            # Move all boats
+            for boat in boats:
+                boat.move(dt)
+
+            # Display
+            displayer.display(ts, boats, None)
+
+            # Sleep the necessary time
+            if not args.measure:
+                time.sleep(float(dt)/speed)
+
+        ts_measured.append(ts)
+
+    if args.measure:
+        displayer.stop()
+        print("The mean duration is: %.3f" % np.mean(ts_measured))
 
     # Wait that the player close the window
     while displayer.is_alive():
