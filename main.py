@@ -19,6 +19,9 @@ from player.player_code import PlayerPilot
 
 MEAS_NB_SIMU = 10
 
+WIDTH = 1000
+HEIGHT = 1000
+
 if __name__ == "__main__":
 
     # Parse arguments
@@ -33,27 +36,28 @@ if __name__ == "__main__":
         print("Wait, it will perform %i simulations to have the mean duration your pilot need to finish this run." % MEAS_NB_SIMU)
 
     boats = []
+    start_pos = np.array([50, 500], dtype="float")
 
     # Init Nooboats
     if nooboat_nb > 0:
         for i in range(nooboat_nb - 1):
-            boats.append(Boat(NoobPilot(), "Noob" + str(i)))
-        boats.append(Boat(ChampiNoobPilot(), "ChampiNoob"))
+            boats.append(Boat(NoobPilot(), "Noob" + str(i), start_pos))
+        boats.append(Boat(ChampiNoobPilot(), "ChampiNoob", start_pos))
 
     # Init route
     buoys = []
     valid_dist = 5
-    buoys.append(Buoy(800, 0, valid_dist))
-    buoys.append(Buoy(800, -200, valid_dist))
-    buoys.append(Buoy(0, -200, valid_dist))
-    buoys.append(Buoy(0, 0, valid_dist))
-    buoys.append(Buoy(800, 0, valid_dist))
-    buoys.append(Buoy(800, -200, valid_dist))
-    buoys.append(Buoy(0, -200, valid_dist))
-    buoys.append(Buoy(0, 0, valid_dist))
+    buoys.append(Buoy(800, 500, valid_dist))
+    buoys.append(Buoy(800, 300, valid_dist))
+    buoys.append(Buoy(50, 300, valid_dist))
+    buoys.append(Buoy(50, 500, valid_dist))
+    buoys.append(Buoy(800, 500, valid_dist))
+    buoys.append(Buoy(800, 300, valid_dist))
+    buoys.append(Buoy(50, 300, valid_dist))
+    buoys.append(Buoy(50, 500, valid_dist))
 
     # Init displayer with the buoys
-    displayer = Displayer(0.1, buoys, args.measure)
+    displayer = Displayer(0.05, buoys, WIDTH, HEIGHT, args.measure)
     displayer.start()
 
     # If this is a measure, make 10 simulations
@@ -62,22 +66,25 @@ if __name__ == "__main__":
     for _ in range(nb_simu):
 
         # Init player boat
-        player = Boat(PlayerPilot(), "Player")
+        player = Boat(PlayerPilot(), "Player", start_pos)
         boats.append(player)
 
         # Init wind manager
-        eole = Eole(0, 5)
+        eole = Eole(0, 10, WIDTH, HEIGHT, 100)
 
         # Start simulation
         dt = 0.1
         if args.measure:
             dt = 1
         ts = 0
-        speed = 100
+        speed = 50
         timeout = 6000000
         while ts <= timeout and not player.all_buoys_reached and displayer.is_alive():
             # Update timestamp
             ts += dt
+
+            # Update wind
+            eole.update(dt)
 
             # Update data of every boat
             for boat in boats:
@@ -94,7 +101,7 @@ if __name__ == "__main__":
                 boat.move(dt)
 
             # Display
-            displayer.display(ts, boats, None)
+            displayer.display(ts, boats, eole.get_direction_grid(), eole.get_speed_grid())
 
             # Sleep the necessary time
             if not args.measure:

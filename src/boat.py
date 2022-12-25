@@ -1,7 +1,28 @@
 import numpy as np
 import copy
 
-S_TABLE = [0, 0.2, 1, 2.2, 2.6, 3.1, 3.9, 4.1, 4.3, 4.5, 4.6, 4.5, 4.5, 4.1, 3.8, 3.2, 3, 2.7, 2.5]
+S_TABLE = [
+    0.0,
+    0.04347826086956522,
+    0.2173913043478261,
+    0.47826086956521746,
+    0.5652173913043479,
+    0.673913043478261,
+    0.8478260869565218,
+    0.8913043478260869,
+    0.9347826086956522,
+    0.9782608695652175,
+    1.0,
+    0.9782608695652175,
+    0.9782608695652175,
+    0.8913043478260869,
+    0.8260869565217391,
+    0.6956521739130436,
+    0.6521739130434783,
+    0.5869565217391305,
+    0.5434782608695653
+]
+
 TACK_CHANCE = 1000
 
 def bearing(from_, to):
@@ -77,10 +98,10 @@ class ChampiNoobPilot(NoobPilot):
         self.up_wind_angle = np.radians(40)
 
 class Boat:
-    def __init__(self, pilot, name):
+    def __init__(self, pilot, name, start_pos):
         self.pilot = pilot
 
-        self.pos = np.array([0.0, 0.0])
+        self.pos = start_pos.copy()
         self.speed = 10
         self.yaw = 0
         self.roll = 0
@@ -102,11 +123,13 @@ class Boat:
         wind_deg = np.degrees(self.get_local_wind_angle())
         i = abs(wind_deg) / 10
         i0 = int(round(i))
+        coef = 0
         if i0 >= len(S_TABLE) - 1:
-            self.speed = S_TABLE[-1]
+            coef = S_TABLE[-1]
         else:
             k = (i - i0)
-            self.speed = S_TABLE[i0] + (S_TABLE[i0 + 1] - S_TABLE[i0]) * k
+            coef = S_TABLE[i0] + (S_TABLE[i0 + 1] - S_TABLE[i0]) * k
+        self.speed = coef * self.wind[1]
 
         # Update yaw
         dy = self.helm_angle * dt * 0.5
