@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 
+# Speed table
 S_TABLE = [
     0.0,
     0.04347826086956522,
@@ -23,13 +24,16 @@ S_TABLE = [
     0.5434782608695653
 ]
 
+# 1/TACK_CHANCE is the probability that a Nooboat do a tack
 TACK_CHANCE = 1000
 
+# Calculate the bearing between the positions "from" an "to"
 def bearing(from_, to):
     dx = to[0] - from_[0]
     dy = to[1] - from_[1]
     return np.arctan2(dy, dx)
 
+# Find the angle + k.2.PI closest to the target (usefull to compare to angles)
 def get_angle_around(angle, target):
     while angle < target - np.pi:
         angle += 2 * np.pi
@@ -37,6 +41,7 @@ def get_angle_around(angle, target):
         angle -= 2 * np.pi
     return angle
 
+# Mother class of every Pilot
 class AutoPilot:
     def __init__(self):
         # Init all the observations the pilot can have
@@ -61,30 +66,39 @@ class AutoPilot:
         }
 
 
+    # Function called to update the decisions of the pilot
     def update(self):
         raise("The update function of the AutoPilot class need to be overwritten !")
 
+# Example of a noob pilot
 class NoobPilot(AutoPilot):
     def __init__(self):
         super(NoobPilot, self).__init__()
-        self.yaw_setpoint = None
-        self.up_wind_angle = np.radians(30)
+        self.yaw_setpoint = None # Yaw target
+        self.up_wind_angle = np.radians(30) # Angle min between the boat and the wind
 
     def update(self):
+        # Wait that the previous yaw target have been reached to decide of an other one
         if self.yaw_setpoint is None or abs(self.yaw_setpoint - self.obs["yaw"]) < np.radians(5):
 
+            # Set the bearinf to the next buoy as the yaw setpoint
             self.yaw_setpoint = get_angle_around(self.obs["buoy_bearing"], self.obs["yaw"])
 
+            # Prepare the wind angle to be able to compare it to the yaw
             wind = get_angle_around(self.obs["wind_direction"], self.obs["yaw"])
+            # Get the angle between the wind and the desired yaw in [-PI;PI]
             wind_dest = get_angle_around(wind - self.yaw_setpoint, 0)
+            # If this angle is smaller than the up_wind_angle, change the yaw setpoint
             if abs(wind_dest) < self.up_wind_angle:
+                # Get an hazard coef equals to 1 or -1
                 hazard_coef = 1 if np.random.randint(TACK_CHANCE) != 0 else -1
+                # Choose the closest leg to the actual yaw and use the hazard coef to do a tack sometimes
                 if abs(wind - self.up_wind_angle - self.obs["yaw"]) > abs(wind + self.up_wind_angle - self.obs["yaw"]):
                     self.yaw_setpoint = wind + self.up_wind_angle * hazard_coef
                 else:
                     self.yaw_setpoint = wind - self.up_wind_angle * hazard_coef
 
-
+        # Decide of the helm angle depending of the diff between the yaw and the setpoint
         if abs(self.yaw_setpoint - self.obs["yaw"]) < np.radians(2):
             self.cmd["helm_angle"] = 0
         elif self.yaw_setpoint > self.obs["yaw"]:
@@ -92,6 +106,7 @@ class NoobPilot(AutoPilot):
         else:
             self.cmd["helm_angle"] = np.radians(-20)
 
+# A Noob a little less bad than the other ones
 class ChampiNoobPilot(NoobPilot):
     def __init__(self):
         super(ChampiNoobPilot, self).__init__()
@@ -101,19 +116,23 @@ class Boat:
     def __init__(self, pilot, name, start_pos):
         self.pilot = pilot
 
-        self.pos = start_pos.copy()
-        self.speed = 10
+        self.reset(start_pos)
+
+        self.name = name
+
+        self.wind = [0, 0]
+
+    def reset(self, pos):
+        self.pos = pos.copy()
+        self.speed = 0
         self.yaw = 0
         self.roll = 0
 
         self.helm_angle = 0
 
-        self.name = name
-
         self.buoy_index = 0
         self.all_buoys_reached = False
 
-        self.wind = [0, 0]
 
     def get_local_wind_angle(self):
         return get_angle_around(self.wind[0] - self.yaw, 0)
@@ -149,7 +168,7 @@ class Boat:
             self.buoy_index = 0
             self.all_buoys_reached = True
 
-    def updatePilot(self, wind_data, buoy_data, boats):
+    def update(self, wind_data, buoy_data, boats):
         self.validate_buoy(buoy_data)
 
         # From x,y buoy position to observations

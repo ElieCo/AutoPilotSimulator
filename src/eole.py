@@ -79,7 +79,6 @@ class Eole:
 
             if puff.pos[0] < -self.height / 2:
                 self.puffs.remove(puff)
-                print("New puff")
                 self.create_puff()
 
     def create_puff(self):
@@ -88,7 +87,6 @@ class Eole:
         pos = np.array([self.height, self.width], dtype="float") / 2 \
             + np.array([np.cos(self.wind[0]), np.sin(self.wind[0])]) * max(self.height, self.width)/2 \
             + np.array([np.random.randint(-self.height/2, self.height/2), np.random.randint(-self.width/2, self.width/2)])
-        print(pos)
         orientation = np.radians(np.random.randint(0, 90))
         speed = np.random.randint(20, 80)/10.
         direction = np.radians(np.random.randint(-20, 20))
